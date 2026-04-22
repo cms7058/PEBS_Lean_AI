@@ -41,8 +41,12 @@ FROM node:20-bookworm-slim AS runtime
 # Runtime deps for native modules (better-sqlite3 was compiled in builder —
 # we only need libstdc++ + tini for PID 1 init). Include python3-minimal for
 # a cleaner process tree under docker run.
+# fonts-noto-cjk + fontconfig: 让 @napi-rs/canvas 渲染的图表能正确显示中文
+# （否则帕累托图 / 鱼骨图 / KPI 对比图中的中文会变成豆腐块）
 RUN apt-get update && apt-get install -y --no-install-recommends \
         tini ca-certificates \
+        fonts-noto-cjk fontconfig \
+    && fc-cache -f \
     && rm -rf /var/lib/apt/lists/*
 
 # Non-root user — matches host-mounted /data ownership (uid 10001).
