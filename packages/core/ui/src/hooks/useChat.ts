@@ -1,6 +1,26 @@
 import { useState, useCallback, useRef } from 'react'
 import type { Message, MessagePart, ToolPart } from '../lib/api'
 
+/**
+ * crypto.randomUUID 仅在安全上下文（HTTPS / localhost）可用。当通过 http://IP:port
+ * 公网访问时会抛 TypeError。此处提供一个无加密强度的回退实现（仅用作 UI message id）。
+ */
+function genId(): string {
+  try {
+    const c = (globalThis as any).crypto
+    if (c && typeof c.randomUUID === 'function') return c.randomUUID()
+    if (c && typeof c.getRandomValues === 'function') {
+      const b = new Uint8Array(16)
+      c.getRandomValues(b)
+      b[6] = (b[6] & 0x0f) | 0x40
+      b[8] = (b[8] & 0x3f) | 0x80
+      const h = Array.from(b, x => x.toString(16).padStart(2, '0')).join('')
+      return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`
+    }
+  } catch { /* fall through */ }
+  return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10)
+}
+
 export type ChatStatus = 'idle' | 'streaming' | 'error'
 
 export interface UseChatReturn {
@@ -58,7 +78,7 @@ export function useChat(initialConvId?: string): UseChatReturn {
 
     // Optimistically add user message
     const userMsg: Message = {
-      id: crypto.randomUUID(),
+      id: genId(),
       conversation_id: conversationId ?? '',
       role: 'user',
       content: text,
@@ -69,7 +89,7 @@ export function useChat(initialConvId?: string): UseChatReturn {
     setError(null)
 
     // Placeholder for streaming assistant message
-    const assistantId = crypto.randomUUID()
+    const assistantId = genId()
     const assistantMsg: Message = {
       id: assistantId,
       conversation_id: conversationId ?? '',
