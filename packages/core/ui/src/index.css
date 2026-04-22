@@ -1,0 +1,89 @@
+/* Reset */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; }
+body {
+  background: #f4f4f5;
+  color: #1a1a1a;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.5;
+}
+button { cursor: pointer; border: none; background: none; font: inherit; color: inherit; }
+input, textarea { font: inherit; color: inherit; background: none; border: none; outline: none; }
+a { color: inherit; text-decoration: none; }
+
+/* Scrollbar */
+* { scrollbar-width: thin; scrollbar-color: #d0d0d0 transparent; }
+*::-webkit-scrollbar { width: 4px; height: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 2px; }
+*::-webkit-scrollbar-thumb:hover { background: #bbb; }
+
+/* Prose (markdown) */
+.prose p { margin-bottom: 0.55em; }
+.prose p:last-child { margin-bottom: 0; }
+.prose ul { list-style: disc; padding-left: 1.2rem; margin-bottom: 0.55em; }
+.prose ol { list-style: decimal; padding-left: 1.2rem; margin-bottom: 0.55em; }
+.prose li { margin-bottom: 0.2em; }
+.prose h1 { font-size: 1.1em; font-weight: 600; margin: 0.9em 0 0.3em; color: #111; }
+.prose h2 { font-size: 1em;   font-weight: 600; margin: 0.7em 0 0.25em; color: #1a1a1a; }
+.prose h3 { font-size: 0.92em; font-weight: 600; margin: 0.6em 0 0.2em;  color: #222; }
+.prose code {
+  background: #ebebeb; color: #333;
+  padding: 0.12em 0.38em; border-radius: 3px;
+  font-size: 0.84em; font-family: 'SF Mono', 'JetBrains Mono', Consolas, monospace;
+  border: 1px solid #ddd;
+}
+.prose pre {
+  background: #f0f0f0; border: 1px solid #ddd;
+  padding: 0.7rem 0.9rem; border-radius: 6px;
+  margin-bottom: 0.7em; overflow-x: auto;
+}
+.prose pre code { background: none; border: none; padding: 0; font-size: 0.82em; }
+.prose blockquote { border-left: 2px solid #ccc; padding-left: 0.75rem; color: #888; font-style: italic; margin-bottom: 0.55em; }
+.prose table { width: 100%; border-collapse: collapse; margin-bottom: 0.7em; font-size: 0.85em; }
+.prose th { border: 1px solid #ddd; padding: 0.35rem 0.55rem; background: #ebebeb; font-weight: 600; color: #333; }
+.prose td { border: 1px solid #e8e8e8; padding: 0.35rem 0.55rem; color: #555; }
+.prose strong { font-weight: 600; color: #111; }
+.prose a { color: #3b6ef5; text-decoration: underline; }
+.prose a:hover { color: #2857d6; }
+.prose hr { border: none; border-top: 1px solid #ddd; margin: 0.8em 0; }
+
+/* Help modal — larger reading typography for rendered docs */
+.help-doc-body { color: #2a2a2a; font-size: 13.5px; line-height: 1.7; }
+.help-doc-body h1 { font-size: 22px; font-weight: 700; margin: 0.2em 0 0.6em; color: #111; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+.help-doc-body h2 { font-size: 17px; font-weight: 700; margin: 1.4em 0 0.5em; color: #111; }
+.help-doc-body h3 { font-size: 14.5px; font-weight: 600; margin: 1.1em 0 0.4em; color: #222; }
+.help-doc-body p  { margin-bottom: 0.8em; }
+.help-doc-body ul { list-style: disc; padding-left: 1.4rem; margin-bottom: 0.8em; }
+.help-doc-body ol { list-style: decimal; padding-left: 1.4rem; margin-bottom: 0.8em; }
+.help-doc-body li { margin-bottom: 0.25em; }
+.help-doc-body code { background: #f0f0f0; color: #c7254e; padding: 0.1em 0.38em; border-radius: 3px; font-size: 0.85em; font-family: 'SF Mono', 'JetBrains Mono', Consolas, monospace; border: 1px solid #e4e4e4; }
+.help-doc-body pre  { background: #1f1f23; color: #f0f0f0; padding: 0.9rem 1.1rem; border-radius: 6px; margin-bottom: 0.9em; overflow-x: auto; font-size: 0.85em; }
+.help-doc-body pre code { background: none; border: none; color: inherit; padding: 0; font-size: inherit; }
+.help-doc-body blockquote { border-left: 3px solid #ccc; padding: 0.2em 0 0.2em 0.8rem; color: #666; background: #fafafa; margin-bottom: 0.9em; }
+.help-doc-body table { width: 100%; border-collapse: collapse; margin-bottom: 1em; font-size: 0.9em; }
+.help-doc-body th { border: 1px solid #ddd; padding: 0.5rem 0.7rem; background: #f4f4f5; font-weight: 600; color: #333; text-align: left; }
+.help-doc-body td { border: 1px solid #e8e8e8; padding: 0.45rem 0.7rem; color: #444; }
+.help-doc-body strong { font-weight: 700; color: #111; }
+.help-doc-body a { color: #2563eb; text-decoration: underline; }
+.help-doc-body a:hover { color: #1d4ed8; }
+.help-doc-body hr { border: none; border-top: 1px solid #e4e4e4; margin: 1.4em 0; }
+
+/* Bounce animation for thinking dots */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.dot-bounce { animation: bounce 1s infinite; }
+.dot-bounce:nth-child(2) { animation-delay: 0.15s; }
+.dot-bounce:nth-child(3) { animation-delay: 0.3s; }
+
+/* Cursor blink */
+@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.cursor-blink { animation: blink 1s step-end infinite; }
+
+/* Spinner (tool-call running indicator) */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.8s linear infinite; }

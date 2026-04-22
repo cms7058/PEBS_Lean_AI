@@ -1,0 +1,11 @@
+{
+  "name": "@lean-ai/skill-charts",
+  "version": "1.0.0",
+  "description": "LeanAI 图表技能 — 内置 4 类精益常用图表（鱼骨 / Pareto / VSM / 箱型）的 SVG 生成器；支持从 xls/xlsx/csv 数据文件导入后生成图表",
+  "main": "index.js",
+  "leanAiSkill": true,
+  "leanAiDisplayName": "图表生成",
+  "keywords": ["lean-ai-skill", "lean", "charts", "svg", "fishbone", "pareto", "vsm", "boxplot"],
+  "author": "LeanAI",
+  "license": "MIT"
+}

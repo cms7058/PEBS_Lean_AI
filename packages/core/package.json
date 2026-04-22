@@ -1,0 +1,58 @@
+{
+  "name": "@lean-ai/core",
+  "version": "1.0.0",
+  "description": "LeanAI - 精益生产 AI 智能体",
+  "bin": {
+    "lean-ai": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "pnpm build:ui && pnpm build:server",
+    "build:server": "tsup",
+    "build:ui": "npx vite build ui",
+    "dev": "concurrently -n server,ui -c green,blue \"tsup --watch\" \"npx vite ui\"",
+    "dev:server": "tsup --watch",
+    "dev:ui": "npx vite ui",
+    "start": "node dist/cli/index.js start --no-open",
+    "clean": "rm -rf dist"
+  },
+  "files": [
+    "dist/"
+  ],
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "better-sqlite3": "^11.7.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "handlebars": "^4.7.8",
+    "mammoth": "^1.12.0",
+    "multer": "^1.4.5-lts.1",
+    "open": "^10.1.0",
+    "openai": "^4.77.0",
+    "pdf-parse": "^2.4.5",
+    "uuid": "^11.0.5",
+    "xlsx": "^0.18.5",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.2",
+    "postcss": "^8.5.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^3.4.17",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.6"
+  }
+}

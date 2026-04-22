@@ -1,0 +1,11 @@
+{
+  "name": "@lean-ai/skill-knowledge",
+  "version": "1.0.0",
+  "description": "LeanAI 知识库技能 — 基于 SQLite 的精益知识检索（10 篇内置种子文档 + 用户自定义条目）",
+  "main": "index.js",
+  "leanAiSkill": true,
+  "leanAiDisplayName": "精益知识库",
+  "keywords": ["lean-ai-skill", "lean", "knowledge", "rag"],
+  "author": "LeanAI",
+  "license": "MIT"
+}

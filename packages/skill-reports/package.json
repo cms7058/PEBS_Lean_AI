@@ -1,0 +1,15 @@
+{
+  "name": "@lean-ai/skill-reports",
+  "version": "1.1.0",
+  "description": "LeanAI 报告技能 — 8D / DMAIC / 通用 / 精益问题分析综合报告的 Word 生成器，内置 Markdown 预览",
+  "main": "index.js",
+  "leanAiSkill": true,
+  "leanAiDisplayName": "报告生成",
+  "keywords": ["lean-ai-skill", "lean", "reports", "8d", "dmaic", "lean-analysis", "docx", "word"],
+  "author": "LeanAI",
+  "license": "MIT",
+  "dependencies": {
+    "docx": "^9.6.1",
+    "@napi-rs/canvas": "^0.1.80"
+  }
+}

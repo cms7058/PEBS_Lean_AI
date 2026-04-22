@@ -1,0 +1,19 @@
+# Exclude heavy/irrelevant paths from Docker build context
+node_modules
+**/node_modules
+**/dist
+**/.turbo
+.git
+.gitignore
+.DS_Store
+*.log
+.env
+.env.*
+*.md
+!README.md
+!docs/**/*.md
+LeanAI智能体方案文档.docx
+.claude
+.vscode
+.idea
+scripts/deploy.sh

@@ -1,0 +1,47 @@
+# ---- 依赖 ----
+node_modules/
+.pnpm-store/
+
+# ---- 构建产物 ----
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# ---- 日志 / 临时 ----
+*.log
+logs/
+*.tmp
+.cache/
+
+# ---- 环境变量与密钥 ----
+.env
+.env.*
+!.env.example
+
+# ---- 编辑器 / 系统 ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ---- 运行时数据（绝不入库） ----
+.lean-ai/
+exports/
+uploads/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite-journal
+
+# ---- 测试 ----
+coverage/
+.nyc_output/
+
+# ---- 发布产物 ----
+*.tgz
+
+# ---- Claude Code 工作数据 ----
+.claude/

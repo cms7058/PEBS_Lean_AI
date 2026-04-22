@@ -1,0 +1,43 @@
+# LeanAI systemd 单元模板
+# 由 scripts/deploy.sh 自动安装到 /etc/systemd/system/lean-ai.service
+# 如需手动部署：
+#   1. 将本文件复制到 /etc/systemd/system/lean-ai.service
+#   2. 按注释修改其中的路径/用户/密钥
+#   3. systemctl daemon-reload && systemctl enable --now lean-ai
+[Unit]
+Description=LeanAI 精益生产 AI 智能体
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# 运行用户 — 推荐使用无登录权限的系统用户
+User=leanai
+Group=leanai
+
+# 代码目录
+WorkingDirectory=/opt/lean-ai
+
+Environment=NODE_ENV=production
+Environment=LEANAI_DATA_DIR=/var/lib/lean-ai
+Environment=LEANAI_HOST=0.0.0.0
+Environment=LEANAI_PORT=3741
+Environment=LEANAI_NO_OPEN=1
+Environment=LEANAI_DOCS_DIR=/opt/lean-ai/docs
+# 必须替换：openssl rand -hex 32
+Environment=LEANAI_LICENSE_SECRET=REPLACE_ME_WITH_STRONG_RANDOM
+
+ExecStart=/usr/bin/node /opt/lean-ai/packages/core/dist/cli/index.js start
+Restart=on-failure
+RestartSec=5s
+
+# 安全加固
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/lean-ai
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

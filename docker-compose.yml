@@ -1,0 +1,59 @@
+# =========================================================================
+# LeanAI — docker-compose for cloud / private enterprise deployment
+#
+# Quick start:
+#   1. cp .env.example .env   # 填入 LEANAI_LICENSE_SECRET 和（可选）LLM API Key
+#   2. docker compose up -d --build
+#   3. 浏览器打开 http://<服务器IP>:3741
+# =========================================================================
+services:
+  lean-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lean-ai:latest
+    container_name: lean-ai
+    restart: unless-stopped
+
+    # 端口：宿主 3741 → 容器 3741
+    # 如果要监听 80 需要在宿主（Nginx / Caddy）做反向代理，详见 DEPLOYMENT.md
+    ports:
+      - "${LEANAI_BIND_ADDR:-0.0.0.0}:${LEANAI_HOST_PORT:-3741}:3741"
+
+    environment:
+      # 容器内必须监听 0.0.0.0 才能被宿主端口映射访问
+      LEANAI_HOST: "0.0.0.0"
+      LEANAI_PORT: "3741"
+      LEANAI_NO_OPEN: "1"
+      LEANAI_DATA_DIR: "/data"
+
+      # 订阅/激活码签名密钥 — 企业私有化部署务必设置一个强随机值
+      # 设置后才能通过 lean-ai config 或 UI 激活个人/企业授权
+      LEANAI_LICENSE_SECRET: "${LEANAI_LICENSE_SECRET:?请在 .env 中设置 LEANAI_LICENSE_SECRET}"
+
+      # 可选：如果部署到多域名 / 反向代理后，允许的前端来源
+      # 例： LEANAI_CORS_ORIGIN=https://leanai.example.com,https://admin.example.com
+      LEANAI_CORS_ORIGIN: "${LEANAI_CORS_ORIGIN:-}"
+
+      TZ: "${TZ:-Asia/Shanghai}"
+
+    volumes:
+      # 持久化 /data：配置、SQLite、向量库、上传文件、导出报告、日志
+      - lean-ai-data:/data
+
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3741/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  lean-ai-data:
+    driver: local

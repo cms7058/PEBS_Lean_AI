@@ -1,0 +1,11 @@
+{
+  "name": "@lean-ai/skill-diagnosis",
+  "version": "1.0.0",
+  "description": "LeanAI 精益诊断技能 — 6 阶段状态机驱动的系统化诊断流程（分类 → 探查 → 分析 → 方案）",
+  "main": "index.js",
+  "leanAiSkill": true,
+  "leanAiDisplayName": "精益诊断",
+  "keywords": ["lean-ai-skill", "lean", "diagnosis", "8-wastes"],
+  "author": "LeanAI",
+  "license": "MIT"
+}
