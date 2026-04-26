@@ -35,6 +35,23 @@ COPY packages ./packages
 COPY docs ./docs
 RUN pnpm --filter @lean-ai/core build
 
+# 为带运行时依赖的 skill 重建一份真实 node_modules（pnpm 的 symlink 在
+# 拷贝出 monorepo 后会变成死链，技能在 /data/skills/... 下无法 require）。
+# skill-charts / skill-diagnosis / skill-knowledge 没有运行时依赖，跳过即可。
+#
+# 关键：在 workspace 外的 /tmp 目录里用 npm 装一份"真实"node_modules，
+# 然后整体替换掉 pnpm 装出来的 symlink 版本。在 workspace 内直接
+# `npm install` 会被 pnpm-workspace.yaml / 父级 node_modules 干扰。
+RUN mkdir -p /tmp/build-skill-reports \
+    && cp /build/packages/skill-reports/package.json /tmp/build-skill-reports/ \
+    && cp /build/packages/skill-reports/index.js     /tmp/build-skill-reports/ \
+    && cd /tmp/build-skill-reports \
+    && npm install --omit=dev --no-audit --no-fund --no-package-lock \
+    && rm -rf /build/packages/skill-reports \
+    && mv /tmp/build-skill-reports /build/packages/skill-reports \
+    && test -f /build/packages/skill-reports/node_modules/docx/package.json \
+    && test ! -L /build/packages/skill-reports/node_modules/docx
+
 # -------- Stage 2: runtime --------
 FROM node:20-bookworm-slim AS runtime
 
