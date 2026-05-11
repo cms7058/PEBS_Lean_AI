@@ -138,13 +138,13 @@ function PreviewApp({ onRequireAuth }: { onRequireAuth: () => void }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.008v.008H12v-.008z" />
           </svg>
-          <span><b>未注册用户</b> · 这是演示预览，所有功能需要登录或注册后使用</span>
+          <span><b>未注册用户</b> · 当前为内测预览，完整功能需通过邮箱和邀请码验证后使用</span>
           <span style={{ flex: 1 }} />
           <span style={{
             padding: '4px 12px', background: '#111', color: '#fff',
             borderRadius: 6, fontWeight: 500,
           }}>
-            点击任意位置登录 / 注册 →
+            点击任意位置进入内测登录
           </span>
         </div>
 
@@ -157,11 +157,11 @@ function PreviewApp({ onRequireAuth }: { onRequireAuth: () => void }) {
             <h1 style={{
               fontSize: 28, fontWeight: 700, color: '#111', marginBottom: 8,
             }}>
-              PEBS Lean · 精益生产 AI 智能体
+              PEBS Lean 内测版开放
             </h1>
             <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7, marginBottom: 32 }}>
-              描述产线问题，智能体自动调用诊断、图表、报告、知识库等技能，
-              给出结构化改善方案并导出 Word / PDF。支持 Claude、GPT、DeepSeek、通义千问、文心一言、本地 Ollama 多种模型。
+              通过邮箱和邀请码验证后，默认进入企业版能力空间。描述产线问题，
+              智能体会自动调用诊断、图表、报告、知识库等技能，给出结构化改善方案并导出 Word / PDF。
             </p>
 
             {/* Fake chat snippet */}
@@ -196,7 +196,7 @@ function PreviewApp({ onRequireAuth }: { onRequireAuth: () => void }) {
             }}>
               <input
                 readOnly
-                placeholder="描述您的精益问题 …（需登录后使用）"
+                placeholder="描述您的精益问题 …（需内测登录后使用）"
                 style={{
                   flex: 1, border: 'none', outline: 'none', fontSize: 13,
                   color: '#666', background: 'transparent',
@@ -207,12 +207,12 @@ function PreviewApp({ onRequireAuth }: { onRequireAuth: () => void }) {
                 border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 500,
                 cursor: 'pointer',
               }}>
-                登录使用
+                进入内测
               </button>
             </div>
 
             <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: '#888' }}>
-              新账号享 <b style={{ color: '#111' }}>14 天免费试用</b>，无需信用卡
+              内测账号默认 <b style={{ color: '#111' }}>14 天企业版体验</b>，需邮箱和邀请码准入
             </div>
           </div>
         </div>

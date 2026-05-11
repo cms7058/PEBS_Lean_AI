@@ -4,21 +4,22 @@
 # Quick start:
 #   1. cp .env.example .env   # 填入 LEANAI_LICENSE_SECRET 和（可选）LLM API Key
 #   2. docker compose up -d --build
-#   3. 浏览器打开 http://<服务器IP>:3741
+#   3. 浏览器打开 http://<服务器IP>:3742
 # =========================================================================
 services:
-  lean-ai:
+  pebs-lean-ai:
     build:
       context: .
       dockerfile: Dockerfile
-    image: lean-ai:latest
-    container_name: lean-ai
+    image: pebs-lean-ai:latest
+    container_name: pebs-lean-ai
     restart: unless-stopped
 
-    # 端口：宿主 3741 → 容器 3741
+    # 端口：宿主 3742 → 容器 3741
+    # 已知同机占用：3000、3100、8000、8100；3742 不与这些冲突。
     # 如果要监听 80 需要在宿主（Nginx / Caddy）做反向代理，详见 DEPLOYMENT.md
     ports:
-      - "${LEANAI_BIND_ADDR:-0.0.0.0}:${LEANAI_HOST_PORT:-3741}:3741"
+      - "${LEANAI_BIND_ADDR:-0.0.0.0}:${LEANAI_HOST_PORT:-3742}:3741"
 
     environment:
       # 容器内必须监听 0.0.0.0 才能被宿主端口映射访问
@@ -31,6 +32,13 @@ services:
       # 设置后才能通过 lean-ai config 或 UI 激活个人/企业授权
       LEANAI_LICENSE_SECRET: "${LEANAI_LICENSE_SECRET:?请在 .env 中设置 LEANAI_LICENSE_SECRET}"
 
+      # 内测邀请码登录：后端转发到 PEBS 云函数，payload 使用
+      # { action:"loginWithInvite", productKey:"lean-copilot", email, inviteCode }
+      INVITE_APP_ID: "${INVITE_APP_ID:-pebs-Lean-ai}"
+      INVITE_APP_SECRET: "${INVITE_APP_SECRET:?请在 .env 中设置 INVITE_APP_SECRET}"
+      INVITE_PRODUCT_KEY: "${INVITE_PRODUCT_KEY:-Lean-copilot}"
+      INVITE_VERIFY_URL: "${INVITE_VERIFY_URL:-https://fc-mp-ad17509f-ebae-4693-974b-769771dd93c5.next.bspapp.com/pebs-copilot-api}"
+
       # 可选：如果部署到多域名 / 反向代理后，允许的前端来源
       # 例： LEANAI_CORS_ORIGIN=https://leanai.example.com,https://admin.example.com
       LEANAI_CORS_ORIGIN: "${LEANAI_CORS_ORIGIN:-}"
@@ -39,7 +47,7 @@ services:
 
     volumes:
       # 持久化 /data：配置、SQLite、向量库、上传文件、导出报告、日志
-      - lean-ai-data:/data
+      - pebs-lean-ai-data:/data
 
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3741/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
@@ -55,5 +63,5 @@ services:
         max-file: "5"
 
 volumes:
-  lean-ai-data:
+  pebs-lean-ai-data:
     driver: local

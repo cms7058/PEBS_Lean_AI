@@ -1,5 +1,17 @@
 const BASE = '/api'
 
+export class ApiError extends Error {
+  action?: string
+  status: number
+
+  constructor(message: string, action: string | undefined, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.action = action
+    this.status = status
+  }
+}
+
 export async function fetchJSON<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { 'Content-Type': 'application/json' },
@@ -12,7 +24,8 @@ export async function fetchJSON<T>(path: string, options?: RequestInit): Promise
   if (!res.ok) {
     if (isJson) {
       const err = await res.json().catch(() => ({ error: res.statusText }))
-      throw new Error((err as { error?: string }).error || res.statusText)
+      const body = err as { error?: string; message?: string; action?: string }
+      throw new ApiError(body.error || body.message || res.statusText, body.action, res.status)
     }
     // Non-JSON error response — usually the SPA fallback returning index.html
     // because the route is missing. Surface a clearer message than a raw JSON
@@ -135,6 +148,9 @@ export const api = {
   // ---- User account (login / register / logout / me) ----
   accountConfig: () => fetchJSON<{ registrationAllowed: boolean }>('/account/config'),
   me: () => fetchJSON<MeResponse>('/account/me'),
+  internalInviteLogin: (email: string, inviteCode: string) =>
+    fetchJSON<MeResponse>('/account/internal-login',
+      { method: 'POST', body: JSON.stringify({ email, invite_code: inviteCode }) }),
   login: (identifier: string, password: string) =>
     fetchJSON<MeResponse>('/account/login',
       { method: 'POST', body: JSON.stringify({ identifier, password }) }),

@@ -11,6 +11,7 @@
  */
 import { getDb } from '../storage/db'
 import { hashPassword, verifyPassword } from './password'
+import crypto from 'crypto'
 
 export interface TenantRow {
   id: number
@@ -159,6 +160,78 @@ export function registerAccount(input: {
     role: 'user',
   })
   return { user, tenant }
+}
+
+export function upsertInviteAccount(input: {
+  email: string
+  inviteCode: string
+  durationDays?: number
+}): { user: UserRow; tenant: TenantRow } {
+  const db = getDb()
+  const email = input.email.toLowerCase().trim()
+  const digest = crypto.createHash('sha1').update(email).digest('hex')
+  const username = `beta_${digest.slice(0, 20)}`
+  const displayName = email.split('@')[0] || '内测用户'
+  const now = Date.now()
+  const expiresAt = now + (input.durationDays ?? 14) * 24 * 60 * 60 * 1000
+  const password = `internal:${email}:${input.inviteCode}`
+  const notes = JSON.stringify({
+    source: 'internal-beta',
+    product: 'lean-copilot',
+    email,
+    inviteCode: input.inviteCode,
+  })
+
+  const existingUser = findUserByUsername(username) || findUserByEmail(email)
+  let tenant: TenantRow
+  let user: UserRow
+
+  const tx = db.transaction(() => {
+    if (existingUser) {
+      tenant = getTenant(existingUser.tenant_id) || createTenant({
+        name: `${displayName} 的 Lean 内测企业空间`,
+        plan: 'enterprise',
+        expiresAt,
+        seats: 10,
+        notes,
+      })
+      tenant = updateTenant(tenant.id, {
+        name: tenant.name || `${displayName} 的 Lean 内测企业空间`,
+        status: 'active',
+        plan: 'enterprise',
+        expires_at: expiresAt,
+        seats: Math.max(tenant.seats || 1, 10),
+        notes,
+      })!
+      db.prepare(`
+        UPDATE users
+           SET tenant_id = ?, username = ?, email = ?, display_name = ?,
+               password_hash = ?, role = 'user', status = 'active'
+         WHERE id = ?
+      `).run(tenant.id, username, email, existingUser.display_name || displayName, hashPassword(password), existingUser.id)
+      user = getUser(existingUser.id)!
+      return
+    }
+
+    tenant = createTenant({
+      name: `${displayName} 的 Lean 内测企业空间`,
+      plan: 'enterprise',
+      expiresAt,
+      seats: 10,
+      notes,
+    })
+    user = createUser({
+      tenantId: tenant.id,
+      username,
+      email,
+      displayName,
+      password,
+      role: 'user',
+    })
+  })
+  tx()
+
+  return { user: user!, tenant: tenant! }
 }
 
 export function getUser(id: number): UserRow | undefined {
