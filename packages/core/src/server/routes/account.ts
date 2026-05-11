@@ -47,7 +47,7 @@ function registrationAllowed(): boolean {
 }
 
 function inviteProductKey(): string {
-  return (process.env.INVITE_PRODUCT_KEY || 'lean-copilot').trim().toLowerCase()
+  return (process.env.INVITE_PRODUCT_KEY || 'Lean-copilot').trim()
 }
 
 function inviteApply(res: Response, message = '邀请码尚未激活，请先申请邀请码'): void {
