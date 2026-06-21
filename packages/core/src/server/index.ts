@@ -15,6 +15,7 @@ import knowledgeRouter from './routes/knowledge'
 import chartsRouter from './routes/charts'
 import billingRouter from './routes/billing'
 import docsRouter from './routes/docs'
+import amibaRouter from './routes/amiba'
 import { ensureBillingSchema } from '../billing/manager'
 import { attachAuth } from '../auth/middleware'
 import { getDb } from '../storage/db'
@@ -29,6 +30,66 @@ export interface StartedServer {
   host: string
   close: () => void
 }
+
+// 阿米巴接入落地页（自包含 HTML，读 URL 参数 → POST /api/amiba/connect → 显示状态）。
+const LEAN_REGISTER_HTML = `<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LeanAI · 接入阿米巴</title>
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:linear-gradient(160deg,#1c1207,#2a1d0c);color:#fde68a;
+    font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  .card{width:100%;max-width:520px;background:#170f06;border:1px solid #3a2a12;border-radius:16px;
+    padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:#fbbf24}
+  .cube{width:18px;height:18px;border-radius:5px;background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+  h1{margin:18px 0 6px;font-size:20px;color:#fef3c7}
+  p{margin:0;font-size:13px;line-height:1.6;color:#d6b772}
+  .row{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:7px 0;border-bottom:1px solid #2a1d0c}
+  .k{color:#b08a4a}.v{color:#fde68a;font-family:ui-monospace,monospace;word-break:break-all;text-align:right}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .chip{font-size:11px;padding:3px 9px;border-radius:999px;background:#2a1d0c;color:#fcd34d;border:1px solid #533a14}
+  .ok{margin-top:16px;padding:12px 14px;border-radius:10px;background:#0c2a1d;border:1px solid #14532d;color:#6ee7b7;font-size:13px}
+  .err{margin-top:16px;padding:12px 14px;border-radius:10px;background:#2a0c0c;border:1px solid #531414;color:#fca5a5;font-size:13px}
+  .sync{margin-top:14px;padding:12px 14px;border-radius:10px;background:#1c1207;border:1px solid #3a2a12}
+  .btnrow{display:flex;gap:10px;margin-top:20px}
+  a.btn,button.btn{flex:1;text-align:center;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;
+    cursor:pointer;border:none;text-decoration:none;display:inline-block}
+  .primary{background:#f59e0b;color:#1c1207}.ghost{background:transparent;color:#d6b772;border:1px solid #3a2a12}
+</style></head><body><div class="card">
+  <div class="brand"><span class="cube"></span><span>PEBS LeanAI</span>
+    <span style="color:#7c5a2a;font-weight:400">·</span><span style="color:#b08a4a;font-weight:400;font-size:13px">接入阿米巴动态智能体</span></div>
+  <div id="content"><h1>正在接入…</h1><p>正在向阿米巴登记 LeanAI 的能力，请稍候。</p></div>
+  <div class="btnrow"><a class="btn ghost" href="/">进入 LeanAI</a><a id="back" class="btn primary" style="display:none">返回阿米巴</a></div>
+</div>
+<script>
+(async function(){
+  var q=new URLSearchParams(location.search);
+  var p={amiba_endpoint:q.get('amiba_endpoint')||'',amiba_token:q.get('amiba_token')||'',
+    enterprise_id:q.get('enterprise_id')||'',source:q.get('source')||'lean'};
+  var content=document.getElementById('content');
+  var back=document.getElementById('back');
+  if(p.amiba_endpoint){back.style.display='inline-block';back.href=p.amiba_endpoint;}
+  function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]});}
+  if(!p.amiba_endpoint||!p.amiba_token||!p.enterprise_id){
+    content.innerHTML='<h1>缺少接入参数</h1><p>此页应由阿米巴「工具接入」点击「接入并跳转」自动打开（携带令牌与企业信息）。</p>';return;}
+  try{
+    var r=await fetch('/api/amiba/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});
+    var d=await r.json();
+    if(!r.ok){throw new Error(d.error||d.detail||'接入失败');}
+    var caps=(d.capabilities||[]).map(function(c){return '<span class="chip">'+esc(c)+'</span>';}).join('');
+    var sync=d.sync&&d.sync.ok?'<div class="sync"><div style="font-size:12px;color:#b08a4a;margin-bottom:6px">浪费项回填阿米巴</div><div style="font-size:12.5px;color:#fcd34d">'+esc(d.sync.summary||'')+'</div></div>':'';
+    content.innerHTML='<h1>'+(d.hello_ok?'接入成功 ✓':'接入未完成')+'</h1>'+
+      '<p>'+(d.hello_ok?'LeanAI 已登记到阿米巴，法/环 维度的诊断浪费项已回填到对应节点。':'接入信息已保存，但回连阿米巴校验未通过。')+'</p>'+
+      '<div style="margin-top:16px">'+
+      '<div class="row"><span class="k">服务企业 ID</span><span class="v">'+esc(d.enterprise_id)+'</span></div>'+
+      '<div class="row"><span class="k">阿米巴地址</span><span class="v">'+esc(d.amiba_endpoint)+'</span></div>'+
+      '<div class="row"><span class="k">能力上报</span><span class="v">'+(d.hello_ok?'已确认':'待确认')+'</span></div>'+
+      '<div class="chips">'+caps+'</div></div>'+sync+
+      (d.hello_ok?'<div class="ok">能力已上报阿米巴，接入闭环完成。</div>':'<div class="err">'+esc(d.hello_error||'')+'</div>');
+  }catch(e){content.innerHTML='<h1>接入未完成</h1><div class="err">'+esc(e.message)+'</div>';}
+})();
+</script></body></html>`
 
 export async function startServer(options: ServerOptions = {}): Promise<StartedServer> {
   const host = options.host ?? '127.0.0.1'
@@ -73,6 +134,7 @@ export async function startServer(options: ServerOptions = {}): Promise<StartedS
   app.use('/api/charts', chartsRouter)
   app.use('/api/billing', billingRouter)
   app.use('/api/docs', docsRouter)
+  app.use('/api/amiba', amibaRouter)
 
   // Ensure billing tables exist and default subscription row is seeded.
   try { ensureBillingSchema() } catch (err) {
@@ -83,6 +145,14 @@ export async function startServer(options: ServerOptions = {}): Promise<StartedS
   // Health check
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', version: '1.0.0' })
+  })
+
+  // 阿米巴接入落地页（服务端渲染，自包含，不依赖 React 路由）。
+  // 阿米巴「工具接入」跳转到这里，携带 amiba_endpoint/amiba_token/enterprise_id/source。
+  app.get('/register', (_req, res) => {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate')
+    res.send(LEAN_REGISTER_HTML)
   })
 
   // Serve React UI static files.
