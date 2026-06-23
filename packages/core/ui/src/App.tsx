@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Sidebar } from './components/Sidebar'
 import { ChatArea } from './components/ChatArea'
 import { SettingsModal } from './components/SettingsModal'
@@ -332,6 +332,7 @@ function AuthenticatedApp({ me, onLoggedOut }: { me: MeResponse; onLoggedOut: ()
       />
 
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, background: '#f4f4f5' }}>
+        <AmibaProjectBanner />
         <ChatArea
           conversationId={activeId}
           initialMessages={activeMessages}
@@ -370,6 +371,95 @@ function AuthenticatedApp({ me, onLoggedOut }: { me: MeResponse; onLoggedOut: ()
       )}
       {showAdmin && me.user.role === 'admin' && (
         <AdminConsole onClose={() => setShowAdmin(false)} />
+      )}
+    </div>
+  )
+}
+
+interface AmibaProject {
+  id: string; enterpriseName?: string; partNo?: string; productName?: string
+  status: string; totalSeconds: number; manHours: number; laborCost: number; laborRate: number
+  tasks: { id: string; running: boolean; status: string }[]
+  report?: { ok: boolean; error?: string } | null
+}
+function hmsTimer(sec: number): string {
+  sec = Math.max(0, Math.floor(sec))
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60
+  const z = (n: number) => (n < 10 ? '0' : '') + n
+  return `${z(h)}:${z(m)}:${z(s)}`
+}
+
+// 阿米巴模式：从「重新接入/换令牌（带产品）」进入 LeanAI 时，操作区顶部内嵌该产品的
+// 计时横幅，计时随你在 LeanAI 里实际诊断/改善而走；点「提交并回传工时」回传到阿米巴该产品。
+function AmibaProjectBanner() {
+  const [ctx] = useState<{ projectId?: string; productName?: string; partNo?: string; enterpriseName?: string } | null>(() => {
+    try { return JSON.parse(localStorage.getItem('lean-amiba-project') || 'null') } catch { return null }
+  })
+  const [proj, setProj] = useState<AmibaProject | null>(null)
+  const fetchedAt = useRef<number>(Date.now())
+  const [, setTick] = useState(0)
+  const [submitting, setSubmitting] = useState(false)
+
+  const load = useCallback(async () => {
+    if (!ctx?.projectId) return
+    try {
+      const r = await fetch(`/api/amiba/projects/${ctx.projectId}`, { credentials: 'same-origin' })
+      if (r.ok) { setProj(await r.json()); fetchedAt.current = Date.now() }
+    } catch { /* ignore */ }
+  }, [ctx])
+  useEffect(() => { load() }, [load])
+  useEffect(() => { const t = setInterval(() => setTick(x => x + 1), 1000); return () => clearInterval(t) }, [])
+
+  if (!ctx?.projectId) return null
+  const running = !!proj && proj.status !== 'submitted' && proj.tasks.some(t => t.running)
+  const liveTotal = (proj?.totalSeconds || 0) + (running ? (Date.now() - fetchedAt.current) / 1000 : 0)
+  const submitted = proj?.status === 'submitted'
+
+  const act = async (action: 'start' | 'stop') => {
+    const t = proj?.tasks[0]
+    if (!ctx?.projectId || !t) return
+    try {
+      const r = await fetch(`/api/amiba/projects/${ctx.projectId}/tasks/${t.id}/${action}`, { method: 'POST', credentials: 'same-origin' })
+      if (r.ok) { setProj(await r.json()); fetchedAt.current = Date.now() }
+    } catch { /* ignore */ }
+  }
+  const submit = async () => {
+    if (!confirm('提交本产品的诊断/改善工时？将停止计时并回传到阿米巴。')) return
+    setSubmitting(true)
+    try {
+      const r = await fetch(`/api/amiba/projects/${ctx.projectId}/submit`, { method: 'POST', credentials: 'same-origin' })
+      const d = await r.json()
+      if (!r.ok) throw new Error(d.error || '提交失败')
+      setProj(d); fetchedAt.current = Date.now()
+      localStorage.removeItem('lean-amiba-project')
+    } catch (e) { alert((e as Error).message) }
+    finally { setSubmitting(false) }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, padding: '10px 16px', borderBottom: '1px solid #f1d9a8', background: 'linear-gradient(135deg,#fffbeb,#fef3c7)', color: '#92400e' }}>
+      <span style={{ fontSize: 18 }}>🔗</span>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 700 }}>阿米巴项目 · {ctx.enterpriseName || proj?.enterpriseName || ''}</div>
+        <div style={{ fontSize: 12, color: '#b45309' }}>{ctx.productName || proj?.productName} <span style={{ fontFamily: 'monospace' }}>{ctx.partNo || proj?.partNo}</span> · 诊断/改善计时{submitted ? ' · 已提交' : (running ? ' · 计时中' : '')}</div>
+      </div>
+      <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+        <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'monospace', color: '#b45309' }}>{hmsTimer(liveTotal)}</div>
+        <div style={{ fontSize: 11, color: '#b45309' }}>{(liveTotal / 3600).toFixed(2)}h{proj ? ` · 估 ¥${Math.round(liveTotal / 3600 * proj.laborRate).toLocaleString('zh-CN')}` : ''}</div>
+      </div>
+      {!submitted && proj && (
+        running
+          ? <button onClick={() => act('stop')} style={{ border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', background: '#fbbf24', color: '#1c1207' }}>暂停计时</button>
+          : <button onClick={() => act('start')} style={{ border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', background: '#10b981', color: '#fff' }}>开始计时</button>
+      )}
+      {!submitted ? (
+        <button disabled={submitting} onClick={submit} style={{ border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', background: '#f59e0b', color: '#1c1207' }}>
+          {submitting ? '提交中…' : '提交并回传工时'}
+        </button>
+      ) : (
+        <span style={{ fontSize: 12, color: proj?.report?.ok ? '#15803d' : '#b45309' }}>
+          {proj?.report?.ok ? `已回传 ${proj.manHours}h` : `回传失败：${proj?.report?.error || ''}`}
+        </span>
       )}
     </div>
   )
